@@ -27,7 +27,34 @@ Cada matafuego lleva una etiqueta con un código QR. Al escanearla con la cámar
 
 ## Cargar los matafuegos
 
-Todos los datos están en `data/matafuegos.json`. Para agregar uno, copiá un bloque existente y cambiá los valores. Las fechas van en formato `AAAA-MM-DD`. El `id` es lo que se codifica en el QR, así que no lo cambies después de imprimir la etiqueta.
+Todos los datos están en `data/matafuegos.json`, que arranca vacío (`[]`). Cada matafuego es un bloque como este (separá los bloques con comas, dentro de los corchetes):
+
+```json
+[
+  {
+    "id": "MF-001",
+    "ubicacion": "Planta baja - Hall de entrada",
+    "sector": "Recepción",
+    "tipo": "Polvo químico seco ABC",
+    "agente": "Fosfato monoamónico 90%",
+    "capacidad": "5 kg",
+    "clases": ["A", "B", "C"],
+    "marca": "",
+    "modelo": "",
+    "numeroSerie": "",
+    "numeroCilindro": "",
+    "fechaFabricacion": "2021-10-20",
+    "ultimaRecarga": "2026-02-10",
+    "vencimientoRecarga": "2027-02-10",
+    "ultimaPruebaHidraulica": "2021-10-20",
+    "vencimientoPruebaHidraulica": "2026-10-20",
+    "empresaMantenimiento": "",
+    "telefonoMantenimiento": "",
+    "observaciones": ""
+  }
+]
+```
+ Las fechas van en formato `AAAA-MM-DD`. El `id` es lo que se codifica en el QR, así que no lo cambies después de imprimir la etiqueta.
 
 ## Publicarlo (GitHub Pages)
 

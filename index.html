@@ -72,7 +72,7 @@
               <td><a class="boton secundario" href="${escapar(urlFicha(m.id))}">Ver</a></td>
             </tr>`;
           }).join("")
-        : '<tr><td colspan="5" class="suave">Sin resultados.</td></tr>';
+        : '<tr><td colspan="5" class="suave">' + (matafuegos.length ? "Sin resultados." : "Todavía no hay matafuegos cargados. Agregalos en data/matafuegos.json.") + "</td></tr>";
     }
 
     function renderEtiquetas() {
