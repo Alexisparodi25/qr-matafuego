@@ -16,6 +16,7 @@
     <section class="tarjeta">
       <h2>Apuntá la cámara al código QR del matafuego</h2>
       <div id="lector"></div>
+      <pre id="resultado" class="tarjeta" style="display:none;white-space:pre-wrap;font:inherit;margin:12px 0"></pre>
       <p id="mensaje" class="suave">También podés escanearlo directamente con la cámara del celular.</p>
       <div class="acciones">
         <button id="iniciar" class="boton">Activar cámara</button>
@@ -37,8 +38,16 @@
     const mensaje = document.getElementById("mensaje");
     let lector = null;
 
-    // Acepta una URL de ficha (…/matafuego.html?id=X) o directamente un ID.
+    // Acepta un QR con los datos adentro (se muestran acá), una URL de ficha
+    // (…/matafuego.html?id=X) o directamente un ID.
     function abrir(texto) {
+      if (texto.includes("\n")) {
+        const res = document.getElementById("resultado");
+        res.textContent = texto;
+        res.style.display = "block";
+        mensaje.textContent = "Datos leídos del QR.";
+        return;
+      }
       let id = texto.trim();
       try {
         const u = new URL(id);
@@ -57,7 +66,7 @@
           { fps: 10, qrbox: { width: 250, height: 250 } },
           async (texto) => {
             await lector.stop();
-            mensaje.textContent = "QR leído, abriendo ficha…";
+            mensaje.textContent = "QR leído.";
             abrir(texto);
           }
         );

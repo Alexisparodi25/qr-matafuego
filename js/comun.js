@@ -63,3 +63,25 @@ function urlFicha(id) {
 function escapar(txt) {
   return String(txt ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
+
+// Texto con todos los datos que va guardado dentro del QR.
+// Al escanearlo, el celular lo muestra directamente, sin abrir ninguna página ni usar internet.
+function textoQR(m) {
+  const lineas = [
+    "MATAFUEGO " + m.id,
+    "Tipo: " + m.tipo + " - " + m.capacidad,
+    "Clases de fuego: " + (m.clases || []).join(" "),
+    "Ubicación: " + m.ubicacion + (m.sector ? " (" + m.sector + ")" : ""),
+    "Marca/modelo: " + [m.marca, m.modelo].filter(Boolean).join(" "),
+    "N° serie: " + (m.numeroSerie || "-") + " | Cilindro: " + (m.numeroCilindro || "-"),
+    "Fabricación: " + formatearFecha(m.fechaFabricacion),
+    "Última recarga: " + formatearFecha(m.ultimaRecarga),
+    "VENCE RECARGA: " + formatearFecha(m.vencimientoRecarga),
+    "Última prueba hidráulica: " + formatearFecha(m.ultimaPruebaHidraulica),
+    "VENCE PRUEBA HIDRÁULICA: " + formatearFecha(m.vencimientoPruebaHidraulica),
+    "Mantenimiento: " + [m.empresaMantenimiento, m.telefonoMantenimiento].filter(Boolean).join(" "),
+  ];
+  if (m.observaciones) lineas.push("Obs: " + m.observaciones);
+  lineas.push("Emergencias: Bomberos 100 / SAME 107 / 911");
+  return lineas.join("\n");
+}

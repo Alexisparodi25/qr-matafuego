@@ -1,6 +1,11 @@
 # Matafuegos QR
 
-Sitio web estático: cada matafuego lleva una etiqueta con un código QR y, al escanearla con el celular, se abre su ficha con toda la información relevante.
+Cada matafuego lleva una etiqueta con un código QR. Al escanearla con la cámara del celular aparecen sus datos.
+
+## Dos modos de QR (se eligen en el listado, antes de imprimir)
+
+- **Datos dentro del QR** (por defecto): el QR guarda el texto con todos los datos. Al escanearlo, el celular los muestra directo, **sin abrir ninguna página y sin internet**. Como el texto queda fijo en la etiqueta, después de cada recarga o prueba hidráulica hay que reimprimirla.
+- **Link a la ficha online**: el QR abre `matafuego.html?id=...`, que muestra el estado calculado en el momento. Para actualizar las fechas alcanza con editar `data/matafuegos.json`, sin reimprimir.
 
 ## Páginas
 

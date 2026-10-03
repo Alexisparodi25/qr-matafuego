@@ -29,7 +29,11 @@
         <h2 style="margin:0">Etiquetas QR para imprimir</h2>
         <button class="boton" onclick="window.print()">Imprimir etiquetas</button>
       </div>
-      <p class="suave no-imprimir">Imprimí estas etiquetas y pegá cada una en su matafuego. Al escanearla con el celular se abre la ficha con toda la información.</p>
+      <div class="no-imprimir" style="margin-bottom:12px">
+        <label><input type="radio" name="modo" value="datos" checked> <b>Datos dentro del QR</b>: al escanearlo con la cámara del celular se ven todos los datos directo, sin abrir ninguna página y sin internet.</label><br>
+        <label><input type="radio" name="modo" value="link"> <b>Link a la ficha online</b>: abre la página con el estado siempre actualizado.</label>
+      </div>
+      <p class="suave no-imprimir">Imprimí estas etiquetas y pegá cada una en su matafuego. Con "Datos dentro del QR", después de cada recarga hay que reimprimir la etiqueta para que tenga las fechas nuevas.</p>
       <div id="etiquetas" class="grilla-qr"></div>
     </section>
   </main>
@@ -39,8 +43,14 @@
   <script>
     let matafuegos = [];
 
+    qrcode.stringToBytes = qrcode.stringToBytesFuncs["UTF-8"]; // para que se vean bien las tildes
+
+    function modo() {
+      return document.querySelector('input[name="modo"]:checked').value;
+    }
+
     function svgQR(texto) {
-      const qr = qrcode(0, "M");
+      const qr = qrcode(0, "L");
       qr.addData(texto);
       qr.make();
       return qr.createSvgTag({ cellSize: 4, margin: 2, scalable: true });
@@ -70,10 +80,10 @@
         <div class="etiqueta-qr">
           <div class="titulo">MATAFUEGO</div>
           <div class="id">${escapar(m.id)}</div>
-          <div class="codigo" style="width:170px;margin:8px auto">${svgQR(urlFicha(m.id))}</div>
+          <div class="codigo" style="width:${modo() === "datos" ? 200 : 170}px;margin:8px auto">${svgQR(modo() === "datos" ? textoQR(m) : urlFicha(m.id))}</div>
           <div>${escapar(m.tipo)} · ${escapar(m.capacidad)}</div>
           <div class="suave">${escapar(m.ubicacion)}</div>
-          <div class="suave">Escaneá para ver la ficha</div>
+          <div class="suave">${modo() === "datos" ? "Escaneá con la cámara para ver los datos" : "Escaneá para ver la ficha"}</div>
         </div>`).join("");
     }
 
@@ -87,6 +97,7 @@
       }
     })();
 
+    document.querySelectorAll('input[name="modo"]').forEach((r) => r.addEventListener("change", renderEtiquetas));
     document.getElementById("buscar").addEventListener("input", (ev) => renderFilas(ev.target.value));
   </script>
 </body>
