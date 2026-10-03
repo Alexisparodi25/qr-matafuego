@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ficha de matafuego</title>
+  <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+  <header class="barra">
+    <h1>🧯 Ficha de matafuego</h1>
+    <nav><a href="index.html">Listado</a><a href="escanear.html">Escanear</a></nav>
+  </header>
+
+  <main id="contenido">
+    <p class="suave">Cargando…</p>
+  </main>
+
+  <script src="js/comun.js"></script>
+  <script>
+    const INSTRUCCIONES = [
+      "Retirar el matafuego de su soporte y llevarlo hasta el lugar del fuego.",
+      "Quitar el precinto y tirar del seguro (pasador).",
+      "Apuntar la boquilla o manguera a la base de las llamas.",
+      "Apretar la palanca de descarga.",
+      "Mover la boquilla de lado a lado cubriendo toda la base del fuego.",
+      "Mantener una vía de escape a la espalda. Si el fuego no se controla, evacuar.",
+    ];
+
+    function fila(etiqueta, valor) {
+      return "<dt>" + escapar(etiqueta) + "</dt><dd>" + (valor || "—") + "</dd>";
+    }
+
+    function chip(estado) {
+      return '<span class="etiqueta ' + estado.nivel + '">' + escapar(estado.texto) + "</span>";
+    }
+
+    function render(m) {
+      document.title = m.id + " · " + m.tipo;
+      const general = estadoGeneral(m);
+      const eRecarga = estadoFecha(m.vencimientoRecarga);
+      const ePH = estadoFecha(m.vencimientoPruebaHidraulica);
+
+      const clases = (m.clases || [])
+        .map((c) => '<div class="clase"><b>' + escapar(c) + "</b><span>" + escapar(CLASES_FUEGO[c] || "") + "</span></div>")
+        .join("");
+
+      const tel = m.telefonoMantenimiento
+        ? '<a href="tel:' + escapar(m.telefonoMantenimiento.replace(/[^\d+]/g, "")) + '">' + escapar(m.telefonoMantenimiento) + "</a>"
+        : "";
+
+      document.getElementById("contenido").innerHTML = `
+        <div class="estado ${general.nivel}"><span class="punto"></span>${escapar(general.texto)}</div>
+
+        <section class="tarjeta">
+          <h2>${escapar(m.id)} — ${escapar(m.tipo)}</h2>
+          <dl class="datos">
+            ${fila("Ubicación", escapar(m.ubicacion))}
+            ${fila("Sector", escapar(m.sector))}
+            ${fila("Capacidad", escapar(m.capacidad))}
+            ${fila("Agente extintor", escapar(m.agente))}
+          </dl>
+        </section>
+
+        <section class="tarjeta">
+          <h2>Clases de fuego en las que se puede usar</h2>
+          <div class="clases">${clases || '<span class="suave">Sin dato</span>'}</div>
+        </section>
+
+        <section class="tarjeta">
+          <h2>Mantenimiento y vencimientos</h2>
+          <dl class="datos">
+            ${fila("Última recarga", escapar(formatearFecha(m.ultimaRecarga)))}
+            ${fila("Vence recarga", escapar(formatearFecha(m.vencimientoRecarga)) + " " + chip(eRecarga))}
+            ${fila("Última prueba hidráulica", escapar(formatearFecha(m.ultimaPruebaHidraulica)))}
+            ${fila("Vence prueba hidráulica", escapar(formatearFecha(m.vencimientoPruebaHidraulica)) + " " + chip(ePH))}
+            ${fila("Empresa de mantenimiento", escapar(m.empresaMantenimiento))}
+            ${fila("Teléfono", tel)}
+          </dl>
+        </section>
+
+        <section class="tarjeta">
+          <h2>Datos del equipo</h2>
+          <dl class="datos">
+            ${fila("Marca", escapar(m.marca))}
+            ${fila("Modelo", escapar(m.modelo))}
+            ${fila("N° de serie", escapar(m.numeroSerie))}
+            ${fila("N° de cilindro", escapar(m.numeroCilindro))}
+            ${fila("Fecha de fabricación", escapar(formatearFecha(m.fechaFabricacion)))}
+            ${fila("Observaciones", escapar(m.observaciones))}
+          </dl>
+        </section>
+
+        <section class="tarjeta">
+          <h2>Cómo usarlo</h2>
+          <ol class="pasos">${INSTRUCCIONES.map((p) => "<li>" + escapar(p) + "</li>").join("")}</ol>
+          ${(m.clases || []).includes("C") ? "" : '<p class="error"><b>⚠ No usar sobre equipos eléctricos energizados.</b></p>'}
+        </section>
+
+        <section class="tarjeta emergencia">
+          Emergencias: Bomberos <a href="tel:100">100</a> · SAME <a href="tel:107">107</a> · <a href="tel:911">911</a>
+        </section>
+      `;
+    }
+
+    (async () => {
+      const cont = document.getElementById("contenido");
+      const id = new URLSearchParams(location.search).get("id");
+      if (!id) {
+        cont.innerHTML = '<p class="error">Falta el identificador del matafuego en la URL (?id=...).</p><a class="boton" href="escanear.html">Escanear un QR</a>';
+        return;
+      }
+      try {
+        const lista = await cargarMatafuegos();
+        const m = lista.find((x) => x.id.toLowerCase() === id.toLowerCase());
+        if (!m) {
+          cont.innerHTML = '<p class="error">No se encontró el matafuego <b>' + escapar(id) + '</b>.</p><a class="boton" href="index.html">Ver listado</a>';
+          return;
+        }
+        render(m);
+      } catch (e) {
+        cont.innerHTML = '<p class="error">' + escapar(e.message) + "</p>";
+      }
+    })();
+  </script>
+</body>
+</html>

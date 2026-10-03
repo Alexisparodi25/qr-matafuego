@@ -1,0 +1,160 @@
+:root {
+  --rojo: #c62828;
+  --rojo-oscuro: #8e0000;
+  --fondo: #f4f4f6;
+  --tarjeta: #ffffff;
+  --texto: #1d1d1f;
+  --suave: #6b6b70;
+  --borde: #e2e2e6;
+  --ok: #2e7d32;
+  --ok-fondo: #e8f5e9;
+  --aviso: #b26a00;
+  --aviso-fondo: #fff4e0;
+  --vencido: #c62828;
+  --vencido-fondo: #fdecea;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: var(--fondo);
+  color: var(--texto);
+  line-height: 1.45;
+}
+
+header.barra {
+  background: var(--rojo);
+  color: #fff;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+header.barra h1 { font-size: 1.15rem; margin: 0; }
+header.barra a { color: #fff; text-decoration: none; }
+header.barra nav { margin-left: auto; display: flex; gap: 14px; font-size: .95rem; }
+
+main { max-width: 860px; margin: 0 auto; padding: 16px; }
+
+.tarjeta {
+  background: var(--tarjeta);
+  border: 1px solid var(--borde);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+.tarjeta h2 { margin: 0 0 12px; font-size: 1.05rem; }
+
+.estado {
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  font-weight: 600;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.estado .punto { width: 14px; height: 14px; border-radius: 50%; flex: none; }
+.ok { background: var(--ok-fondo); color: var(--ok); }
+.ok .punto { background: var(--ok); }
+.aviso { background: var(--aviso-fondo); color: var(--aviso); }
+.aviso .punto { background: var(--aviso); }
+.vencido { background: var(--vencido-fondo); color: var(--vencido); }
+.vencido .punto { background: var(--vencido); }
+
+.etiqueta {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: .82rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+dl.datos {
+  display: grid;
+  grid-template-columns: minmax(130px, 40%) 1fr;
+  gap: 8px 12px;
+  margin: 0;
+}
+dl.datos dt { color: var(--suave); }
+dl.datos dd { margin: 0; font-weight: 500; overflow-wrap: anywhere; }
+
+.clases { display: flex; flex-direction: column; gap: 8px; }
+.clase { display: flex; gap: 10px; align-items: center; }
+.clase b {
+  width: 34px; height: 34px; flex: none;
+  display: grid; place-items: center;
+  border-radius: 8px;
+  background: var(--rojo); color: #fff; font-size: 1.1rem;
+}
+
+ol.pasos { margin: 0; padding-left: 22px; }
+ol.pasos li { margin-bottom: 6px; }
+
+.boton {
+  display: inline-block;
+  background: var(--rojo);
+  color: #fff;
+  border: 0;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-size: 1rem;
+  text-decoration: none;
+  cursor: pointer;
+}
+.boton:hover { background: var(--rojo-oscuro); }
+.boton.secundario { background: #fff; color: var(--rojo); border: 1px solid var(--rojo); }
+
+.emergencia {
+  background: var(--rojo);
+  color: #fff;
+  text-align: center;
+  font-weight: 700;
+  font-size: 1.15rem;
+}
+.emergencia a { color: #fff; }
+
+table.lista { width: 100%; border-collapse: collapse; }
+table.lista th, table.lista td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--borde); vertical-align: middle; }
+table.lista th { color: var(--suave); font-weight: 500; font-size: .9rem; }
+
+.acciones { display: flex; gap: 8px; flex-wrap: wrap; }
+.buscador { width: 100%; padding: 10px 12px; font-size: 1rem; border: 1px solid var(--borde); border-radius: 8px; margin-bottom: 12px; }
+
+.error { color: var(--vencido); }
+.suave { color: var(--suave); font-size: .9rem; }
+
+/* Etiquetas QR para imprimir */
+.grilla-qr { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+.etiqueta-qr {
+  background: #fff;
+  border: 2px solid var(--rojo);
+  border-radius: 12px;
+  padding: 12px;
+  text-align: center;
+  break-inside: avoid;
+}
+.etiqueta-qr .titulo { background: var(--rojo); color: #fff; font-weight: 700; border-radius: 6px; padding: 4px; margin-bottom: 8px; }
+.etiqueta-qr .codigo { display: flex; justify-content: center; margin: 8px 0; }
+.etiqueta-qr .id { font-size: 1.3rem; font-weight: 700; }
+
+#lector { max-width: 420px; margin: 0 auto; }
+
+@media (max-width: 600px) {
+  table.lista .ocultar-movil { display: none; }
+  table.lista th, table.lista td { padding: 8px 4px; }
+  table.lista .etiqueta { white-space: normal; }
+  table.lista .boton { padding: 8px 10px; }
+  dl.datos { grid-template-columns: 1fr; gap: 2px; }
+  dl.datos dd { margin-bottom: 8px; }
+}
+
+@media print {
+  header.barra, .no-imprimir { display: none !important; }
+  body { background: #fff; }
+  main { max-width: none; padding: 0; }
+}

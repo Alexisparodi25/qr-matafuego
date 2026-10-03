@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Matafuegos QR</title>
+  <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+  <header class="barra">
+    <h1>🧯 Matafuegos QR</h1>
+    <nav><a href="index.html">Listado</a><a href="escanear.html">Escanear</a></nav>
+  </header>
+
+  <main>
+    <section class="tarjeta no-imprimir">
+      <h2>Listado de matafuegos</h2>
+      <input id="buscar" class="buscador" type="search" placeholder="Buscar por ID, ubicación, sector o tipo…">
+      <table class="lista">
+        <thead>
+          <tr><th>ID</th><th>Ubicación</th><th class="ocultar-movil">Tipo</th><th>Estado</th><th></th></tr>
+        </thead>
+        <tbody id="filas"><tr><td colspan="5" class="suave">Cargando…</td></tr></tbody>
+      </table>
+    </section>
+
+    <section class="tarjeta">
+      <div class="acciones no-imprimir" style="justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <h2 style="margin:0">Etiquetas QR para imprimir</h2>
+        <button class="boton" onclick="window.print()">Imprimir etiquetas</button>
+      </div>
+      <p class="suave no-imprimir">Imprimí estas etiquetas y pegá cada una en su matafuego. Al escanearla con el celular se abre la ficha con toda la información.</p>
+      <div id="etiquetas" class="grilla-qr"></div>
+    </section>
+  </main>
+
+  <script src="js/vendor/qrcode-generator.js"></script>
+  <script src="js/comun.js"></script>
+  <script>
+    let matafuegos = [];
+
+    function svgQR(texto) {
+      const qr = qrcode(0, "M");
+      qr.addData(texto);
+      qr.make();
+      return qr.createSvgTag({ cellSize: 4, margin: 2, scalable: true });
+    }
+
+    function renderFilas(filtro) {
+      const f = (filtro || "").toLowerCase();
+      const visibles = matafuegos.filter((m) =>
+        [m.id, m.ubicacion, m.sector, m.tipo].join(" ").toLowerCase().includes(f)
+      );
+      document.getElementById("filas").innerHTML = visibles.length
+        ? visibles.map((m) => {
+            const e = estadoGeneral(m);
+            return `<tr>
+              <td><b>${escapar(m.id)}</b></td>
+              <td>${escapar(m.ubicacion)}</td>
+              <td class="ocultar-movil">${escapar(m.tipo)}</td>
+              <td><span class="etiqueta ${e.nivel}">${escapar(e.texto)}</span></td>
+              <td><a class="boton secundario" href="${escapar(urlFicha(m.id))}">Ver</a></td>
+            </tr>`;
+          }).join("")
+        : '<tr><td colspan="5" class="suave">Sin resultados.</td></tr>';
+    }
+
+    function renderEtiquetas() {
+      document.getElementById("etiquetas").innerHTML = matafuegos.map((m) => `
+        <div class="etiqueta-qr">
+          <div class="titulo">MATAFUEGO</div>
+          <div class="id">${escapar(m.id)}</div>
+          <div class="codigo" style="width:170px;margin:8px auto">${svgQR(urlFicha(m.id))}</div>
+          <div>${escapar(m.tipo)} · ${escapar(m.capacidad)}</div>
+          <div class="suave">${escapar(m.ubicacion)}</div>
+          <div class="suave">Escaneá para ver la ficha</div>
+        </div>`).join("");
+    }
+
+    (async () => {
+      try {
+        matafuegos = await cargarMatafuegos();
+        renderFilas("");
+        renderEtiquetas();
+      } catch (e) {
+        document.getElementById("filas").innerHTML = '<tr><td colspan="5" class="error">' + escapar(e.message) + "</td></tr>";
+      }
+    })();
+
+    document.getElementById("buscar").addEventListener("input", (ev) => renderFilas(ev.target.value));
+  </script>
+</body>
+</html>
