@@ -11,9 +11,9 @@ Cada matafuego lleva una etiqueta con un código QR. Al escanearla con la cámar
 
 | Página | Para qué sirve |
 |---|---|
-| `index.html` | Listado de matafuegos con su estado, buscador y **etiquetas QR para imprimir**. |
-| `matafuego.html?id=MF-001` | Ficha del matafuego (la página que abre el QR). |
-| `escanear.html` | Escáner con la cámara desde el navegador, o búsqueda manual por ID. |
+| `index.html` (inicio) | **Escanear el QR que ya trae el matafuego**, con la cámara o subiendo una foto. La información que trae el QR aparece sola, ordenada en una tabla, y se guarda en la lista "Matafuegos escaneados" (en ese celular o computadora), que se puede descargar como planilla para Excel. Si el QR trae un link (por ejemplo, a la página de la empresa de mantenimiento), muestra el link para abrirlo. |
+| `etiquetas.html` | Listado de los matafuegos cargados en `data/matafuegos.json` y etiquetas QR propias para imprimir. |
+| `matafuego.html?id=MF-001` | Ficha de un matafuego cargado (la abren las etiquetas en modo link). |
 
 ## Qué muestra la ficha
 

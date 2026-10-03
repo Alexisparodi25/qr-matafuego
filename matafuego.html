@@ -9,7 +9,7 @@
 <body>
   <header class="barra">
     <h1>🧯 Ficha de matafuego</h1>
-    <nav><a href="index.html">Listado</a><a href="escanear.html">Escanear</a></nav>
+    <nav><a href="index.html">Escanear</a><a href="etiquetas.html">Mis etiquetas</a></nav>
   </header>
 
   <main id="contenido">
@@ -107,14 +107,14 @@
       const cont = document.getElementById("contenido");
       const id = new URLSearchParams(location.search).get("id");
       if (!id) {
-        cont.innerHTML = '<p class="error">Falta el identificador del matafuego en la URL (?id=...).</p><a class="boton" href="escanear.html">Escanear un QR</a>';
+        cont.innerHTML = '<p class="error">Falta el identificador del matafuego en la URL (?id=...).</p><a class="boton" href="index.html">Escanear un QR</a>';
         return;
       }
       try {
         const lista = await cargarMatafuegos();
         const m = lista.find((x) => x.id.toLowerCase() === id.toLowerCase());
         if (!m) {
-          cont.innerHTML = '<p class="error">No se encontró el matafuego <b>' + escapar(id) + '</b>.</p><a class="boton" href="index.html">Ver listado</a>';
+          cont.innerHTML = '<p class="error">No se encontró el matafuego <b>' + escapar(id) + '</b>.</p><a class="boton" href="etiquetas.html">Ver listado</a>';
           return;
         }
         render(m);

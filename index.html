@@ -3,102 +3,230 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Matafuegos QR</title>
+  <title>Escanear matafuego</title>
   <link rel="stylesheet" href="css/estilos.css">
 </head>
 <body>
   <header class="barra">
-    <h1>🧯 Matafuegos QR</h1>
-    <nav><a href="index.html">Listado</a><a href="escanear.html">Escanear</a></nav>
+    <h1>🧯 Escanear matafuego</h1>
+    <nav><a href="index.html">Escanear</a><a href="etiquetas.html">Mis etiquetas</a></nav>
   </header>
 
   <main>
-    <section class="tarjeta no-imprimir">
-      <h2>Listado de matafuegos</h2>
-      <input id="buscar" class="buscador" type="search" placeholder="Buscar por ID, ubicación, sector o tipo…">
-      <table class="lista">
-        <thead>
-          <tr><th>ID</th><th>Ubicación</th><th class="ocultar-movil">Tipo</th><th>Estado</th><th></th></tr>
-        </thead>
-        <tbody id="filas"><tr><td colspan="5" class="suave">Cargando…</td></tr></tbody>
-      </table>
+    <section class="tarjeta">
+      <h2>Escaneá el código QR del matafuego</h2>
+      <p class="suave">La información que trae el QR aparece abajo sola, no hace falta escribir nada.</p>
+      <div id="lector"></div>
+      <p id="mensaje" class="suave"></p>
+      <div class="acciones">
+        <button id="iniciar" class="boton">📷 Abrir cámara</button>
+        <label class="boton secundario">🖼️ Subir foto del QR
+          <input id="foto" type="file" accept="image/*" hidden>
+        </label>
+      </div>
+      <div id="lectorFoto" hidden></div>
     </section>
 
+    <section id="resultado" class="tarjeta" hidden></section>
+
     <section class="tarjeta">
-      <div class="acciones no-imprimir" style="justify-content: space-between; align-items: center; margin-bottom: 12px;">
-        <h2 style="margin:0">Etiquetas QR para imprimir</h2>
-        <button class="boton" onclick="window.print()">Imprimir etiquetas</button>
+      <div class="acciones" style="justify-content: space-between; align-items: center; margin-bottom: 8px;">
+        <h2 style="margin:0">Matafuegos escaneados</h2>
+        <div class="acciones">
+          <button id="descargar" class="boton secundario">Descargar planilla</button>
+          <button id="borrar" class="boton secundario">Borrar lista</button>
+        </div>
       </div>
-      <div class="no-imprimir" style="margin-bottom:12px">
-        <label><input type="radio" name="modo" value="datos" checked> <b>Datos dentro del QR</b>: al escanearlo con la cámara del celular se ven todos los datos directo, sin abrir ninguna página y sin internet.</label><br>
-        <label><input type="radio" name="modo" value="link"> <b>Link a la ficha online</b>: abre la página con el estado siempre actualizado.</label>
-      </div>
-      <p class="suave no-imprimir">Imprimí estas etiquetas y pegá cada una en su matafuego. Con "Datos dentro del QR", después de cada recarga hay que reimprimir la etiqueta para que tenga las fechas nuevas.</p>
-      <div id="etiquetas" class="grilla-qr"></div>
+      <p class="suave">Se guardan en este celular o computadora.</p>
+      <div id="historial"></div>
     </section>
   </main>
 
-  <script src="js/vendor/qrcode-generator.js"></script>
+  <script src="js/vendor/html5-qrcode.min.js"></script>
   <script src="js/comun.js"></script>
   <script>
-    let matafuegos = [];
+    const CLAVE = "matafuegos-escaneados";
+    const mensaje = document.getElementById("mensaje");
+    let lector = null;
 
-    qrcode.stringToBytes = qrcode.stringToBytesFuncs["UTF-8"]; // para que se vean bien las tildes
+    // ---------- Interpretar el contenido del QR ----------
 
-    function modo() {
-      return document.querySelector('input[name="modo"]:checked').value;
-    }
+    // Devuelve { titulo, campos: [[clave, valor]], link, texto }
+    function interpretar(texto) {
+      const t = texto.trim();
+      const r = { titulo: "", campos: [], link: null, texto: t };
 
-    function svgQR(texto) {
-      const qr = qrcode(0, "L");
-      qr.addData(texto);
-      qr.make();
-      return qr.createSvgTag({ cellSize: 4, margin: 2, scalable: true });
-    }
-
-    function renderFilas(filtro) {
-      const f = (filtro || "").toLowerCase();
-      const visibles = matafuegos.filter((m) =>
-        [m.id, m.ubicacion, m.sector, m.tipo].join(" ").toLowerCase().includes(f)
-      );
-      document.getElementById("filas").innerHTML = visibles.length
-        ? visibles.map((m) => {
-            const e = estadoGeneral(m);
-            return `<tr>
-              <td><b>${escapar(m.id)}</b></td>
-              <td>${escapar(m.ubicacion)}</td>
-              <td class="ocultar-movil">${escapar(m.tipo)}</td>
-              <td><span class="etiqueta ${e.nivel}">${escapar(e.texto)}</span></td>
-              <td><a class="boton secundario" href="${escapar(urlFicha(m.id))}">Ver</a></td>
-            </tr>`;
-          }).join("")
-        : '<tr><td colspan="5" class="suave">' + (matafuegos.length ? "Sin resultados." : "Todavía no hay matafuegos cargados. Agregalos en data/matafuegos.json.") + "</td></tr>";
-    }
-
-    function renderEtiquetas() {
-      document.getElementById("etiquetas").innerHTML = matafuegos.map((m) => `
-        <div class="etiqueta-qr">
-          <div class="titulo">MATAFUEGO</div>
-          <div class="id">${escapar(m.id)}</div>
-          <div class="codigo" style="width:${modo() === "datos" ? 200 : 170}px;margin:8px auto">${svgQR(modo() === "datos" ? textoQR(m) : urlFicha(m.id))}</div>
-          <div>${escapar(m.tipo)} · ${escapar(m.capacidad)}</div>
-          <div class="suave">${escapar(m.ubicacion)}</div>
-          <div class="suave">${modo() === "datos" ? "Escaneá con la cámara para ver los datos" : "Escaneá para ver la ficha"}</div>
-        </div>`).join("");
-    }
-
-    (async () => {
-      try {
-        matafuegos = await cargarMatafuegos();
-        renderFilas("");
-        renderEtiquetas();
-      } catch (e) {
-        document.getElementById("filas").innerHTML = '<tr><td colspan="5" class="error">' + escapar(e.message) + "</td></tr>";
+      if (/^https?:\/\//i.test(t)) {
+        r.link = t;
+        r.titulo = "El QR tiene un link";
+        return r;
       }
-    })();
 
-    document.querySelectorAll('input[name="modo"]').forEach((r) => r.addEventListener("change", renderEtiquetas));
-    document.getElementById("buscar").addEventListener("input", (ev) => renderFilas(ev.target.value));
+      if (t.startsWith("{")) {
+        try {
+          const obj = JSON.parse(t);
+          r.campos = Object.entries(obj).map(([k, v]) => [k, Array.isArray(v) ? v.join(" ") : String(v)]);
+          r.titulo = obj.id || obj.ID || "Matafuego";
+          return r;
+        } catch (_) { /* no es JSON: se sigue como texto */ }
+      }
+
+      const partes = t.split(/\r?\n|;|\|/).map((p) => p.trim()).filter(Boolean);
+      for (const p of partes) {
+        const m = p.match(/^([^:=]{1,40}?)\s*[:=]\s*(.+)$/);
+        if (m) r.campos.push([m[1].trim(), m[2].trim()]);
+        else if (!r.titulo) r.titulo = p;
+        else r.campos.push(["Dato", p]);
+      }
+      if (!r.titulo) r.titulo = "Matafuego";
+      return r;
+    }
+
+    function htmlResultado(r, fecha) {
+      let html = "<h2>" + escapar(r.titulo) + "</h2>";
+      if (fecha) html += '<p class="suave">Escaneado el ' + escapar(new Date(fecha).toLocaleString("es-AR")) + "</p>";
+      if (r.link) {
+        html += '<p>Este QR no trae los datos escritos: lleva a una página web (por lo general, de la empresa de mantenimiento o del fabricante).</p>'
+          + '<p style="overflow-wrap:anywhere"><a href="' + escapar(r.link) + '" target="_blank" rel="noopener">' + escapar(r.link) + "</a></p>"
+          + '<a class="boton" href="' + escapar(r.link) + '" target="_blank" rel="noopener">Abrir la página del QR</a>';
+      } else if (r.campos.length) {
+        html += '<dl class="datos">' + r.campos.map(([k, v]) => "<dt>" + escapar(k) + "</dt><dd>" + escapar(v) + "</dd>").join("") + "</dl>";
+      } else {
+        html += '<p style="white-space:pre-wrap">' + escapar(r.texto) + "</p>";
+      }
+      return html;
+    }
+
+    // ---------- Lista guardada ----------
+
+    function leerLista() {
+      try { return JSON.parse(localStorage.getItem(CLAVE)) || []; } catch (_) { return []; }
+    }
+    function guardarLista(lista) {
+      try { localStorage.setItem(CLAVE, JSON.stringify(lista)); } catch (_) { /* sin almacenamiento disponible */ }
+    }
+
+    function renderHistorial() {
+      const lista = leerLista();
+      const cont = document.getElementById("historial");
+      if (!lista.length) {
+        cont.innerHTML = '<p class="suave">Todavía no escaneaste ningún matafuego.</p>';
+        return;
+      }
+      cont.innerHTML = '<table class="lista"><tbody>' + lista.map((e, i) => {
+        const r = interpretar(e.texto);
+        return "<tr><td><b>" + escapar(r.titulo) + '</b><br><span class="suave">' + escapar(new Date(e.fecha).toLocaleString("es-AR")) + "</span></td>"
+          + '<td><button class="boton secundario" data-ver="' + i + '">Ver</button></td></tr>';
+      }).join("") + "</tbody></table>";
+    }
+
+    function mostrar(texto, fecha) {
+      const res = document.getElementById("resultado");
+      res.innerHTML = htmlResultado(interpretar(texto), fecha);
+      res.hidden = false;
+      res.scrollIntoView({ behavior: "smooth" });
+    }
+
+    function procesar(texto) {
+      // QR de nuestras propias etiquetas con link a la ficha: se abre la ficha.
+      try {
+        const u = new URL(texto.trim());
+        if (u.origin === location.origin && u.pathname.endsWith("/matafuego.html")) {
+          location.href = u.href;
+          return;
+        }
+      } catch (_) { /* no es URL */ }
+
+      const fecha = new Date().toISOString();
+      const lista = leerLista();
+      lista.unshift({ fecha, texto });
+      guardarLista(lista);
+      renderHistorial();
+      mostrar(texto, fecha);
+      mensaje.className = "suave";
+      mensaje.textContent = "QR leído.";
+    }
+
+    // ---------- Cámara y foto ----------
+
+    document.getElementById("iniciar").addEventListener("click", async () => {
+      const boton = document.getElementById("iniciar");
+      boton.disabled = true;
+      lector = lector || new Html5Qrcode("lector");
+      try {
+        await lector.start(
+          { facingMode: "environment" },
+          { fps: 10, qrbox: { width: 250, height: 250 } },
+          async (texto) => {
+            await lector.stop();
+            boton.disabled = false;
+            boton.textContent = "📷 Escanear otro";
+            procesar(texto);
+          }
+        );
+        mensaje.className = "suave";
+        mensaje.textContent = "Apuntá la cámara al QR…";
+      } catch (e) {
+        boton.disabled = false;
+        mensaje.className = "error";
+        mensaje.textContent = "No se pudo abrir la cámara. Revisá que el navegador tenga permiso, o usá \"Subir foto del QR\".";
+      }
+    });
+
+    document.getElementById("foto").addEventListener("change", async (ev) => {
+      const archivo = ev.target.files[0];
+      ev.target.value = "";
+      if (!archivo) return;
+      mensaje.className = "suave";
+      mensaje.textContent = "Leyendo la foto…";
+      try {
+        const texto = await new Html5Qrcode("lectorFoto").scanFile(archivo, false);
+        procesar(texto);
+      } catch (_) {
+        mensaje.className = "error";
+        mensaje.textContent = "No se encontró un QR en la foto. Probá con una foto más cerca y bien enfocada.";
+      }
+    });
+
+    // ---------- Botones de la lista ----------
+
+    document.getElementById("historial").addEventListener("click", (ev) => {
+      const i = ev.target.dataset.ver;
+      if (i === undefined) return;
+      const e = leerLista()[i];
+      if (e) mostrar(e.texto, e.fecha);
+    });
+
+    document.getElementById("borrar").addEventListener("click", () => {
+      if (!confirm("¿Borrar todos los matafuegos escaneados?")) return;
+      guardarLista([]);
+      renderHistorial();
+      document.getElementById("resultado").hidden = true;
+    });
+
+    // Planilla CSV (se abre con Excel): una fila por matafuego, una columna por dato.
+    document.getElementById("descargar").addEventListener("click", () => {
+      const lista = leerLista();
+      if (!lista.length) return alert("Todavía no hay matafuegos escaneados.");
+      const filas = lista.map((e) => {
+        const r = interpretar(e.texto);
+        const f = { "Fecha de escaneo": new Date(e.fecha).toLocaleString("es-AR"), "Matafuego": r.titulo };
+        if (r.link) f["Link"] = r.link;
+        for (const [k, v] of r.campos) f[k] = f[k] ? f[k] + " / " + v : v;
+        if (!r.link && !r.campos.length) f["Contenido"] = r.texto;
+        return f;
+      });
+      const columnas = [...new Set(filas.flatMap(Object.keys))];
+      const celda = (v) => '"' + String(v ?? "").replace(/"/g, '""') + '"';
+      const csv = [columnas.map(celda).join(";"), ...filas.map((f) => columnas.map((c) => celda(f[c])).join(";"))].join("\r\n");
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8" }));
+      a.download = "matafuegos-escaneados.csv";
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
+
+    renderHistorial();
   </script>
 </body>
 </html>
